@@ -63,11 +63,7 @@ const analystSearchEngine = async (fullRegex, word) => {
         const arrResultByScore = engineSearch[i];
         if (arrResultByScore != null && arrResultByScore.length) {
             arrResultByScore.forEach(ele => {
-                if (result.length < 3) {
-                    result.push(ele);
-                } else {
-                    return
-                }
+                result.push(ele);
             })
         }
     }
