@@ -4,12 +4,13 @@ const morgan = require('morgan');
 const compression = require('compression');
 const helmet = require('helmet');
 const route = require('./routers');
+const cors = require('cors');
 
 const app = express();
 
 // Init DB
 require('./dbs/initDb');
-
+app.use(cors())
 app.use(morgan("dev"))
 app.use(helmet())
 app.use(compression({ filter: shouldCompress }))
