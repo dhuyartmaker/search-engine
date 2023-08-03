@@ -5,7 +5,14 @@ const asyncHandler = fn => (req, res, next) => {
     fn(req, res, next).catch(next)
 }
 
+const debugConsole = (prefix, data) => {
+    if (process.env.NODE_ENV === "dev") {
+        console.log(prefix, "\n", data)
+    }
+}
+
 module.exports = {
     promisify,
-    asyncHandler
+    asyncHandler,
+    debugConsole
 }
