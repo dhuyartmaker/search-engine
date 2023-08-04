@@ -1,7 +1,7 @@
 ## About The Project
 
-This is my easy search-engine app. Includes 2 repositories (backend + frontend). It is used to by regex concept.
-* I deployed my app. You can check quickly. http://dhuy4rtmaker.space/
+This is my easy search-engine app. Includes 2 repositories (backend + frontend). It is built base on regex concept.
+* I deployed my app by nginx server. You can check quickly. http://dhuy4rtmaker.space/
 ### Built With
 
 * NodeJS v20 (ExpressJs)
