@@ -1,6 +1,7 @@
 const { debugConsole } = require(".");
 const WordModel = require("../models/word.model");
 
+// ----Config----
 const ruleScore = (word) => ({
     0: "^" + word + "$", // exact match with word
     1: `(^${word}.{1}$)|(^.{1}${word}$)`, // can have prefix or post fix
@@ -8,6 +9,8 @@ const ruleScore = (word) => ({
     3: `^.{1,3}${word}.{1,3}$`, // more 
     4: ".{0,2}" + `${word}`.split("").join(".{0,2}") + ".{0,2}", // start split to add space between word
 });
+// --------------
+
 
 const searchByScore = (word = "", datas = []) => {
     debugConsole("==datas==", datas.length, word)
@@ -30,7 +33,7 @@ const searchByScore = (word = "", datas = []) => {
     return results.map(ele => ele.sort((a,b) => a.length - b.length));
 }
 
-const searchProcess = async (word) => {
+const searchProcess = async (word, resultSize = 3) => {
     let result = [];
     let tempWord = word;
     do {
@@ -42,10 +45,10 @@ const searchProcess = async (word) => {
         const setCheckDuplicate = new Set(result)
         result = Array.from(setCheckDuplicate)
         tempWord = tempWord.slice(0, tempWord.length - 1);
-    } while (result.length < 3)
+    } while (result.length < resultSize)
 
-    const sliceResult = result.length <= 3 ? result : result.slice(0, 3);
-    const remainWord = 3 - sliceResult.length;
+    const sliceResult = result.length <= resultSize ? result : result.slice(0, resultSize);
+    const remainWord = resultSize - sliceResult.length;
     if (remainWord != 0) {
         const findRandomWord = (await WordModel.aggregate([{ $sample: { size: remainWord }}])).map(e => e.word_content)
         debugConsole("==findRandomWord==", findRandomWord)
