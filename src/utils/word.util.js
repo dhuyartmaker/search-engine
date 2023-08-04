@@ -2,6 +2,7 @@ const { debugConsole } = require(".");
 const WordModel = require("../models/word.model");
 
 // ----Config----
+const mainRegex = (arrCharacter) => ".*" + arrCharacter.join(".*") + ".*"
 const ruleScore = (word) => ({
     0: "^" + word + "$", // exact match with word
     1: `(^${word}.{1}$)|(^.{1}${word}$)`, // can have prefix or post fix
@@ -77,8 +78,8 @@ const analystSearchEngine = async (fullRegex, word) => {
 }
 
 const getRegexStrSearch = (word) => {
-    const arrWord = word.split("");
-    const wordAfterSlice = ".*" + arrWord.join(".*") + ".*";
+    const toArrCharacter = word.split("");
+    const wordAfterSlice = mainRegex(toArrCharacter);
     return {
         fullRegex: wordAfterSlice,
     }
