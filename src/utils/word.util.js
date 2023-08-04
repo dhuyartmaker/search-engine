@@ -7,7 +7,7 @@ const ruleScore = (word) => ({
     1: `(^${word}.{1}$)|(^.{1}${word}$)`, // can have prefix or post fix
     2: `(^.{1}${word}.{1}$)|(^${word}.{2,3}$)|(^.{2,3}${word}$)`, // have both of pre-post fix 
     3: `^.{1,3}${word}.{1,3}$`, // more 
-    4: ".{0,2}" + `${word}`.split("").join(".{0,2}") + ".{0,2}", // start split to add space between word
+    4: ".{0,2}" + `${word}`.split("").join(".{1,2}") + ".{0,2}", // start split to add space between word
 });
 // --------------
 
@@ -45,12 +45,12 @@ const searchProcess = async (word, resultSize = 3) => {
         const setCheckDuplicate = new Set(result)
         result = Array.from(setCheckDuplicate)
         tempWord = tempWord.slice(0, tempWord.length - 1);
-    } while (result.length < resultSize)
+    } while (result.length < resultSize && tempWord.length > 0)
 
     const sliceResult = result.length <= resultSize ? result : result.slice(0, resultSize);
     const remainWord = resultSize - sliceResult.length;
     if (remainWord != 0) {
-        const findRandomWord = (await WordModel.aggregate([{ $sample: { size: remainWord }}])).map(e => e.word_content)
+        const findRandomWord = (await WordModel.aggregate([{$match: { 'word_content': {'$nin': sliceResult}}}, { $sample: { size: remainWord }}])).map(e => e.word_content)
         debugConsole("==findRandomWord==", findRandomWord)
         sliceResult.push(...findRandomWord)
     }
