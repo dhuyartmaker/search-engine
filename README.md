@@ -2,6 +2,7 @@
 
 This is my easy search-engine app. Includes 2 repositories (backend + frontend). It is built base on regex concept.
 * I deployed my app by nginx server. You can check quickly. http://dhuy4rtmaker.space/
+* Frontend repo: https://github.com/dhuyartmaker/search-engine-app
 ### Built With
 
 * NodeJS v20 (ExpressJs)
@@ -78,4 +79,5 @@ This is some step to install and prepare database
 * Notice*: If DB has many over ~20.000 word. Inserting by this scripts start to take a long time since before inserting, I need check if word is existed to avoid duplicated. In one paragraph, there are have many duplicate words. So, this is neccessary
 ### Rest API
 * There are 3 apis match with 3 options (search, update, delete)
+* With delete: i use logic of search API and find this word.
 * Please check Postman Documents https://documenter.getpostman.com/view/13827204/2s9XxwxumL
