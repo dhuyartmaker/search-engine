@@ -1,16 +1,13 @@
-const { BadRequestError, NotFoundError } = require("../core/error.response");
 const { OkResponseMessage } = require("../core/success.response");
 const WordModel = require("../models/word.model");
-const { searchByScore, getRegexStrSearch, searchProcess } = require("../utils/word.util");
+const { searchProcess } = require("../utils/word.util");
 
 class SearchController {
     async AddCorpus(req, res, next) {
-        const { word_content } = req.body;
-        if (!word_content) throw new BadRequestError("Search text is required!");
-
+        const { formatContent } = req; 
         const holdWord = await WordModel.findOneAndUpdate(
-            { word_content, is_active: true },
-            { word_content, is_active: true },
+            { word_content: formatContent, is_active: true },
+            { word_content: formatContent, is_active: true },
             { new: true, upsert: true }
         );
         return new OkResponseMessage(
@@ -22,9 +19,8 @@ class SearchController {
     }
 
     async SearchCorpus(req, res, next) {
-        const { searchText } = req.query
-        if (!searchText) throw new BadRequestError("Search text is required!")
-        const engineSearch = await searchProcess(searchText)
+        const { formatContent } = req;
+        const engineSearch = await searchProcess(formatContent)
         return new OkResponseMessage(
             {
                 message: "Ok",
@@ -34,15 +30,16 @@ class SearchController {
     }
 
     async DeleteCorpus(req, res, next) {
-        const { word_content } = req.body;
-        if (!word_content) throw new BadRequestError("Search text is required!");
-        const findWord = await WordModel.findOne({ word_content, is_active: true });
-        if (!findWord) throw new NotFoundError("Word not found!");
-
+        const { formatContent } = req;
+        const engineSearch = await searchProcess(formatContent, 1)
+        const findWord = await WordModel.findOne({ word_content: engineSearch[0], is_active: true }).select({ _id: 1, word_content: 1 });
         const deleteWord = await WordModel.findOneAndUpdate({ _id: findWord._id }, { $set: { is_active: false }});
         return new OkResponseMessage(
             {
                 message: "Deleted!",
+                metadata: {
+                    word_content: findWord
+                }
             }
         ).send(res);
     }

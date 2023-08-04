@@ -1,9 +1,12 @@
 const fs = require('fs');
-const { Worker, isMainThread, parentPort } = require('worker_threads');
 const dbInstance = require('./connectDb');
 const WordModel = require('../src/models/word.model');
 
 const argvs = process.argv;
+
+// -------- Config ------------
+let loopSize = 1000; // Insert 1000 words for a time
+// ----------------------------
 
 const getSizeInBytes = obj => {
     let str = null;
@@ -21,36 +24,49 @@ const getSizeInBytes = obj => {
 
 async function main() {
     try {
-        if (isMainThread) {
-            await dbInstance.connect();
-            const data = fs.readFileSync(`./src/corpus/${argvs[2]}`, {
-                encoding: "utf-8"
-            })
-            const trimData = data.trim().replace(/[^a-zA-Z\s]|[\r]/g, "").replace(/\n/g, " ");
-            const wordSplit = `${trimData}`.split(" ");
-            console.log("Found ~", wordSplit.length, "words!")
-            console.log("Insert to corpus.....", getSizeInBytes(wordSplit) / (1024 * 1024), "MB")
-            const setDuplicate = new Set();
-            console.time("start")
-            const wordArray = Array.from(new Set(wordSplit))
-            const arrPromise = [];
+        await dbInstance.connect();
+        const data = fs.readFileSync(`./src/corpus/${argvs[2]}`, {
+            encoding: "utf-8"
+        })
+        const trimData = data.trim().replace(/[^a-zA-Z\s]|[\r]/g, "").replace(/\n/g, " ");
+        const wordSplit = `${trimData}`.split(" ");
+        const removeDup = new Set(wordSplit)
+        console.log("Found ~", removeDup.size, "words!")
+        console.log("Insert to corpus.....", getSizeInBytes(wordSplit) / (1024 * 1024), "MB")
+        console.time("start")
+        const wordArray = Array.from(removeDup)
 
-            for (let i = 0; i < wordArray.length; i += 1) {
-                const word = wordArray[i].toLowerCase();
-                if (!word || setDuplicate.has(word)) {
+        let count = 0;
+        while (count < wordArray.length) {
+            const arrPromise = [];
+            console.log("Insert from", count, "to", loopSize + count)
+            const chunkArrayWord = wordArray.slice(count, loopSize + count)
+            for (let i = 0; i < chunkArrayWord.length; i += 1) {
+                const word = chunkArrayWord[i].toLowerCase();
+                if (!word) {
                     continue;
                 }
+                // Faster
                 arrPromise.push(WordModel.findOne({ word_content: word, is_active: true }).then(async (data) => {
                     if (data) return;
                     await WordModel.create({ word_content: word, is_active: true });
                 }))
-                setDuplicate.add(word)
+
+                // BulkWrite - option
+                // arrPromise.push({
+                //     updateOne: {
+                //         filter: { word_content: word },
+                //         update: { $set: { word_content: word, is_active: true } },
+                //         upsert: true // Nếu không có bản ghi nào phù hợp với điều kiện tìm kiếm, thì thêm mới một bản ghi
+                //     }
+                // })
             }
             await Promise.all(arrPromise)
-
-            console.timeEnd("start")
-            console.log("Insert", arrPromise.length, "success!")
+            count += loopSize;
+            console.log("Insert", arrPromise.length, "complete!")
         }
+
+        console.timeEnd("start")
         process.exit();
     } catch (error) {
         console.error(error);
